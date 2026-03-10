@@ -1,0 +1,62 @@
+# ── Profile: local ────────────────────────────────────────────────────────────
+# Run locally with:  mvn spring-boot:run -pl api-gateway -Dspring-boot.run.profiles=local
+# Eureka must already be running locally on port 8761
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+  client:
+    service-url:
+      defaultZone: http://admin:admin@localhost:8761/eureka/
+    registry-fetch-interval-seconds: 5
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-key-must-be-at-least-32-chars-long}
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: iam-service
+          uri: lb://iam-service
+          predicates:
+            - Path=/auth/**
+
+        - id: iam-service-admin
+          uri: lb://iam-service
+          predicates:
+            - Path=/admin/**
+
+        - id: iam-service-account
+          uri: lb://iam-service
+          predicates:
+              - Path=/me/**
+
+        - id: ingestion-service
+          uri: http://localhost:8000
+          predicates:
+            - Path=/ingest/**
+          filters:
+            - StripPrefix=1        
+
+        # Swagger aggregation — forwards /v3/api-docs/{service} to each service
+        - id: iam-service-docs
+          uri: lb://iam-service
+          predicates:
+            - Path=/v3/api-docs/iam-service
+          filters:
+            - RewritePath=/v3/api-docs/iam-service, /v3/api-docs
+
+        # ── Ingestion Swagger ───────────────────
+        - id: ingestion-service-docs
+          uri: http://localhost:8000
+          predicates:
+            - Path=/v3/api-docs/ingestion-service
+          filters:
+            - RewritePath=/v3/api-docs/ingestion-service, /openapi.json    
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.microservices: DEBUG

@@ -49,5 +49,4 @@ venv/
 env/
 
 # Spring local configs
-application-local.yml
 application-dev.yml

@@ -1,0 +1,27 @@
+# ── Profile: local ────────────────────────────────────────────────────────────
+# Run locally with:  mvn spring-boot:run -pl discovery-server -Dspring-boot.run.profiles=local
+# Or in your IDE set Active Profile = local
+
+spring:
+  security:
+    user:
+      name: admin
+      password: admin   # plain text fine for local dev
+
+eureka:
+  dashboard:
+    username: admin
+    password: admin
+  instance:
+    hostname: localhost
+  client:
+    service-url:
+      defaultZone: http://admin:admin@localhost:8761/eureka/
+  server:
+    enable-self-preservation: false   # disable in dev so evictions happen fast
+
+logging:
+  level:
+    com.netflix.eureka: WARN
+    com.netflix.discovery: WARN
+    com.microservices: DEBUG
