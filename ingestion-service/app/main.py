@@ -14,6 +14,11 @@ from app.collectors.forex import (
     ingest_forex_historical,
     ingest_forex_latest
 )
+from app.collectors.gold_global import (
+    ingest_gold_global_historical,
+    ingest_gold_global_latest,
+    SOURCE_ID_KITCO
+)
 from app.utils.db_check import (has_sufficient_history, is_data_stale,
     has_sufficient_forex_history, is_forex_data_stale) 
 from app.scheduler import start_scheduler
@@ -36,7 +41,7 @@ async def lifespan(app: FastAPI):
 
     print("🚀 Ingestion service starting...")
 
-    # ---------- GOLD HISTORICAL ----------
+    # ---------- VN GOLD HISTORICAL ----------
     if not has_sufficient_history(ASSET_ID_GOLD, SOURCE_ID_CAFEF):
 
         print("📜 No historical gold data found. Ingesting...")
@@ -54,8 +59,25 @@ async def lifespan(app: FastAPI):
         print("✔ Historical gold data already exists. Skipping.")
         update_status("gold_vn_historical", "skipped")
 
+    # ---------- GLOBAL GOLD HISTORICAL ----------
+    if not has_sufficient_history(ASSET_ID_GOLD, SOURCE_ID_KITCO):
 
-    # ---------- SILVER HISTORICAL ----------
+        print("📜 No historical global gold data found. Ingesting...")
+
+        try:
+            ingest_gold_global_historical()
+            update_status("gold_global_historical", "success")
+            print("✅ Historical global gold ingestion completed")
+
+        except Exception as e:
+            update_status("gold_global_historical", "failed")
+            print(f"❌ Global gold historical ingestion failed: {e}")
+
+    else:
+        print("✔ Historical global gold data already exists. Skipping.")
+        update_status("gold_global_historical", "skipped")
+
+    # ---------- VN SILVER HISTORICAL ----------
 
     if not has_sufficient_history(ASSET_ID_SILVER, SOURCE_ID_CAFEF):
 
@@ -154,6 +176,9 @@ def health():
     silver_stale = is_data_stale(
         ASSET_ID_SILVER, SOURCE_ID_CAFEF, SILVER_VN_STALE_THRESHOLD_DAYS
     )
+    gold_global_stale = is_data_stale(
+        ASSET_ID_GOLD, SOURCE_ID_KITCO, GOLD_VN_STALE_THRESHOLD_DAYS
+    )
     forex_stale = {
     currency: is_forex_data_stale(currency, FOREX_STALE_THRESHOLD_DAYS)
     for currency in CURRENCIES
@@ -163,8 +188,10 @@ def health():
         "jobs": ingestion_status,
         "stale_data": {
             "gold_vn": gold_stale,
+            "gold_global": gold_global_stale,
             "silver_vn": silver_stale,
             "forex": forex_stale
+    
         }
     }
 
@@ -198,6 +225,26 @@ def trigger_silver_historical():
     except Exception as e:
         update_status("silver_vn_historical", "failed")
         return {"status": "failed", "error": str(e)}
+    
+@app.post("/trigger/gold-global-historical")
+def trigger_gold_global_historical():
+    try:
+        ingest_gold_global_historical()
+        update_status("gold_global_historical", "success")
+        return {"status": "success"}
+    except Exception as e:
+        update_status("gold_global_historical", "failed")
+        return {"status": "failed", "error": str(e)}
+
+@app.post("/trigger/gold-global-latest")
+def trigger_gold_global_latest():
+    try:
+        ingest_gold_global_latest()
+        update_status("gold_global_latest", "success")
+        return {"status": "success"}
+    except Exception as e:
+        update_status("gold_global_latest", "failed")
+        return {"status": "failed", "error": str(e)}        
 
 @app.post("/trigger/silver-vn-latest")
 def trigger_silver_latest():

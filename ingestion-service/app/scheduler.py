@@ -4,6 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from app.collectors.gold import ingest_gold_vn_latest
 from app.collectors.silver import ingest_silver_vn_latest
 from app.collectors.forex import ingest_forex_latest
+from app.collectors.gold_global import ingest_gold_global_latest
 from app.utils.job_status import update_status
 
 scheduler = BackgroundScheduler()
@@ -15,7 +16,7 @@ CURRENCIES = [
     "SEK","SGD","THB","USD"
 ]
 
-# --------- GOLD ----------
+# --------- GOLD VN ----------
 def job_gold_vn_latest():
     print(f"[{datetime.now()}] Running scheduled job: gold_vn_latest")
     
@@ -25,7 +26,17 @@ def job_gold_vn_latest():
     except Exception:
         update_status("gold_vn_latest", "failed")
 
-# --------- SILVER ----------
+# --------- GOLD GLOBAL ----------
+def job_gold_global_latest():
+    print(f"[{datetime.now()}] Running scheduled job: gold_global_latest")
+
+    try:
+        ingest_gold_global_latest()
+        update_status("gold_global_latest", "success")
+    except Exception:
+        update_status("gold_global_latest", "failed")
+
+# --------- SILVER VN ----------
 def job_silver_vn_latest():
     print(f"[{datetime.now()}] Running scheduled job: silver_vn_latest")
     
@@ -58,6 +69,7 @@ def start_scheduler():
     job_gold_vn_latest()
     job_silver_vn_latest()
     job_forex_latest()
+    job_gold_global_latest()    
 
     # Schedule recurring jobs
     scheduler.add_job(
@@ -84,8 +96,17 @@ def start_scheduler():
         replace_existing=True
     )
 
+    scheduler.add_job(
+    job_gold_global_latest,
+    "cron",
+    minute=7,
+    id="gold_global_latest",
+    replace_existing=True
+    )
+
     scheduler.start()
     print("Scheduler started.")
     print("Job 'gold_vn_latest' will run every hour at minute 5.")
+    print("Job 'gold_global_latest' will run every hour at minute 7.")
     print("Job 'silver_vn_latest' will run every hour at minute 10.")
     print("Job 'forex_latest' will run every hour at minute 15.")

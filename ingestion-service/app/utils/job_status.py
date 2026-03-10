@@ -11,6 +11,7 @@ ingestion_status = {
     "gold_vn_latest": {"status": None, "timestamp": None},
     "gold_vn_historical": {"status": None, "timestamp": None},
     "gold_global_latest": {"status": None, "timestamp": None},
+    "gold_global_historical": {"status": None, "timestamp": None},
     "silver_vn_latest": {"status": None, "timestamp": None},
     "silver_vn_historical": {"status": None, "timestamp": None},
 }
