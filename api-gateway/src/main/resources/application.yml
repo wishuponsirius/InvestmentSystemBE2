@@ -1,0 +1,59 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: api-gateway
+  # Active profile is set via:
+  #   Local → IDE run config or: java -jar ... --spring.profiles.active=local
+  #   Docker → SPRING_PROFILES_ACTIVE env var in docker-compose.yml
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+        add-to-simple-url-handler-mapping: true  # ensures OPTIONS preflight requests are handled
+      # Route definitions live in the profile-specific YMLs
+      # so local and docker can have different URIs if needed.
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, gateway, metrics
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    # Services will appear in the dropdown in Swagger UI
+    urls-primary-name: iam-service
+    urls:
+      - name: iam-service
+        url: /v3/api-docs/iam-service
+      - name: ingestion-service
+        url: /v3/api-docs/ingestion-service
+  api-docs:
+    enabled: true

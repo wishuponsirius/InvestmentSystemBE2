@@ -1,0 +1,27 @@
+# ── Profile: docker ───────────────────────────────────────────────────────────
+# Activated automatically via SPRING_PROFILES_ACTIVE=docker in docker-compose.yml
+
+spring:
+  security:
+    user:
+      name: ${EUREKA_USERNAME}
+      password: ${EUREKA_PASSWORD}
+
+eureka:
+  dashboard:
+    username: ${EUREKA_USERNAME}
+    password: ${EUREKA_PASSWORD}
+  instance:
+    hostname: discovery-server    # Docker service name, resolvable inside the network
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@discovery-server:8761/eureka/
+  server:
+    enable-self-preservation: ${EUREKA_SELF_PRESERVATION:true}
+    renewal-percent-threshold: 0.85
+
+logging:
+  level:
+    com.netflix.eureka: INFO
+    com.netflix.discovery: INFO
+    com.microservices: INFO

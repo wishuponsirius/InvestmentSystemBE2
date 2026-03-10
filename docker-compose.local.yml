@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  docker-compose.local.yml — LOCAL DEV ONLY
+#  Adds local Postgres. Never used on EC2.
+#
+#  Usage:
+#    docker compose -f docker-compose.yml -f docker-compose.local.yml up
+#
+#  Or add this alias to your shell to save typing:
+#    alias dcu="docker compose -f docker-compose.yml -f docker-compose.local.yml up"
+# ─────────────────────────────────────────────────────────────────────────────
+
+volumes:
+  postgres-local-data:
+
+services:
+
+  # ── Local Postgres ─────────────────────────────────────────────────────────
+  postgres-local:
+    image: postgres:16-alpine
+    container_name: postgres-local
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: investment_db
+    volumes:
+      - postgres-local-data:/var/lib/postgresql/data
+      - ./scripts/init-schema.sql:/docker-entrypoint-initdb.d/01-init-schema.sql
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ingestion-service:
+    depends_on:
+      - postgres-local

@@ -1,0 +1,37 @@
+# ── Profile: docker ───────────────────────────────────────────────────────────
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+
+  mail:
+    username: ${GMAIL_USERNAME}
+    password: ${GMAIL_APP_PASSWORD}
+
+  jpa:
+    show-sql: false
+
+app:
+  base-url: ${APP_BASE_URL}
+
+springdoc:
+  server-url: ${APP_BASE_URL}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_USERNAME}:${EUREKA_PASSWORD}@discovery-server:8761/eureka/
+
+logging:
+  level:
+    com.microservices: INFO

@@ -1,0 +1,173 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  docker-compose.yml — SHARED (local + prod)
+#  Run locally:  docker compose -f docker-compose.yml -f docker-compose.local.yml up
+#  Run on EC2:   docker compose up
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  microservices-net:
+    driver: bridge
+
+services:
+
+  # ── Eureka Discovery Server ────────────────────────────────────────────────
+  discovery-server:
+    build:
+      context: .
+      dockerfile: discovery-server/Dockerfile
+    image: microservices/discovery-server:latest
+    container_name: discovery-server
+    restart: unless-stopped
+    ports:
+      - "${EUREKA_PORT:-8761}:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - EUREKA_USERNAME=${EUREKA_USERNAME:-admin}
+      - EUREKA_PASSWORD=${EUREKA_PASSWORD:-admin}
+      - EUREKA_HOSTNAME=discovery-server
+      - EUREKA_SELF_PRESERVATION=${EUREKA_SELF_PRESERVATION:-true}
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider",
+             "http://localhost:8761/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+  # ── API Gateway ────────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    image: microservices/api-gateway:latest
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - EUREKA_USERNAME=${EUREKA_USERNAME:-admin}
+      - EUREKA_PASSWORD=${EUREKA_PASSWORD:-admin}
+      - EUREKA_HOST=discovery-server
+      - EUREKA_PORT=8761
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider",
+             "http://localhost:8080/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+  # ── IAM Service ───────────────────────────────────────────────────────────
+  iam-service:
+    build:
+      context: .
+      dockerfile: iam-service/Dockerfile
+    image: microservices/iam-service:latest
+    container_name: iam-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+      - EUREKA_USERNAME=${EUREKA_USERNAME:-admin}
+      - EUREKA_PASSWORD=${EUREKA_PASSWORD:-admin}
+      - EUREKA_HOST=discovery-server
+      - EUREKA_PORT=8761
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - GMAIL_USERNAME=${GMAIL_USERNAME}
+      - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+      - APP_BASE_URL=${APP_BASE_URL}
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    networks:
+      - microservices-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider",
+             "http://localhost:8081/actuator/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
+
+  ingestion-service:
+    build:
+      context: ./ingestion-service  # path to your Python service folder
+    container_name: ingestion-service
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    networks:
+      - microservices-net
+
+  # ── NEW SERVICE TEMPLATE ───────────────────────────────────────────────────
+  # Copy this block for every new microservice you create.
+  #
+  # <service-name>:
+  #   build:
+  #     context: .
+  #     dockerfile: <service-name>/Dockerfile
+  #   image: microservices/<service-name>:latest
+  #   container_name: <service-name>
+  #   restart: unless-stopped
+  #   ports:
+  #     - "<HOST_PORT>:<CONTAINER_PORT>"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-docker}
+  #     - EUREKA_USERNAME=${EUREKA_USERNAME}
+  #     - EUREKA_PASSWORD=${EUREKA_PASSWORD}
+  #     - EUREKA_HOST=discovery-server
+  #     - EUREKA_PORT=8761
+  #     - DB_HOST=${DB_HOST}
+  #     - DB_PORT=${DB_PORT:-5432}
+  #     - DB_NAME=${DB_NAME}
+  #     - DB_USERNAME=${DB_USERNAME}
+  #     - DB_PASSWORD=${DB_PASSWORD}
+  #   depends_on:
+  #     discovery-server:
+  #       condition: service_healthy
+  #   networks:
+  #     - microservices-net
+  #   healthcheck:
+  #     test: ["CMD", "wget", "--quiet", "--tries=1", "--spider",
+  #            "http://localhost:<CONTAINER_PORT>/actuator/health"]
+  #     interval: 20s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 60s
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512m
+  #         cpus: "0.5"

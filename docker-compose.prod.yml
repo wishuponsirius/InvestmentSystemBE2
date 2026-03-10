@@ -1,0 +1,40 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  docker-compose.prod.yml — EC2 PRODUCTION OVERRIDES
+#  Adds prod-specific settings on top of docker-compose.yml.
+#
+#  Usage on EC2:
+#    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+#  Make sure your .env has all DB_* vars pointing to RDS before running.
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  discovery-server:
+    # No build on prod — pull pre-built image from your registry
+    image: microservices/discovery-server:latest
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+          cpus: "1.0"
+
+  api-gateway:
+    image: microservices/api-gateway:latest
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+          cpus: "1.0"
+
+  # ── Add prod overrides for each new microservice here ─────────────────────
+  # <service-name>:
+  #   image: microservices/<service-name>:latest
+  #   restart: always
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 768m
+  #         cpus: "1.0"

@@ -1,0 +1,53 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.eclipse/
+.settings/
+.project
+.classpath
+*.swp
+*.iws
+out/
+
+# Environment — NEVER commit real secrets
+.env
+
+# Docker
+docker-data/
+*.env.local
+*.env.dev
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+**/*.log
+**/logs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Spring local configs
+application-local.yml
+application-dev.yml

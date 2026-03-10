@@ -1,0 +1,28 @@
+server:
+  port: 8081   # change per service — e.g. user=8081, order=8082, etc.
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: service-template   # RENAME — must match the lb:// route in api-gateway
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # 'update' creates/alters tables automatically to match your @Entity classes.
+      # Safe for dev. For production consider 'validate' and managing schema manually.
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics
+  endpoint:
+    health:
+      show-details: always
