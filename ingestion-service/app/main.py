@@ -19,6 +19,10 @@ from app.collectors.gold_global import (
     ingest_gold_global_latest,
     SOURCE_ID_KITCO
 )
+from app.collectors.silver_global import (
+    ingest_silver_global_historical,
+    ingest_silver_global_latest
+)
 from app.utils.db_check import (has_sufficient_history, is_data_stale,
     has_sufficient_forex_history, is_forex_data_stale) 
 from app.scheduler import start_scheduler
@@ -96,6 +100,24 @@ async def lifespan(app: FastAPI):
         print("✔ Historical silver data already exists. Skipping.")
         update_status("silver_vn_historical", "skipped")
 
+# ---------- GLOBAL SILVER HISTORICAL ----------
+    if not has_sufficient_history(ASSET_ID_SILVER, SOURCE_ID_KITCO):
+
+        print("📜 No historical global silver data found. Ingesting...")
+
+        try:
+            ingest_silver_global_historical()
+            update_status("silver_global_historical", "success")
+            print("✅ Historical global silver ingestion completed")
+
+        except Exception as e:
+            update_status("silver_global_historical", "failed")
+            print(f"❌ Global silver historical ingestion failed: {e}")
+
+    else:
+        print("✔ Historical global silver data already exists. Skipping.")
+        update_status("silver_global_historical", "skipped")
+        
     # ---------- FOREX HISTORICAL ----------
 
     for currency in CURRENCIES:
@@ -179,10 +201,15 @@ def health():
     gold_global_stale = is_data_stale(
         ASSET_ID_GOLD, SOURCE_ID_KITCO, GOLD_VN_STALE_THRESHOLD_DAYS
     )
+
+    silver_global_stale = is_data_stale(
+    ASSET_ID_SILVER, SOURCE_ID_KITCO, SILVER_VN_STALE_THRESHOLD_DAYS
+    )
     forex_stale = {
     currency: is_forex_data_stale(currency, FOREX_STALE_THRESHOLD_DAYS)
+    
     for currency in CURRENCIES
-}
+    }
     return {
         "status": "running",
         "jobs": ingestion_status,
@@ -190,6 +217,7 @@ def health():
             "gold_vn": gold_stale,
             "gold_global": gold_global_stale,
             "silver_vn": silver_stale,
+            "silver_global": silver_global_stale,
             "forex": forex_stale
     
         }
@@ -303,3 +331,23 @@ def trigger_forex_historical(currency: str
         update_status(f"forex_{currency}_historical", "failed")
 
         return {"status": "failed", "error": str(e)}                
+    
+@app.post("/trigger/silver-global-historical")
+def trigger_silver_global_historical():
+    try:
+        ingest_silver_global_historical()
+        update_status("silver_global_historical", "success")
+        return {"status": "success"}
+    except Exception as e:
+        update_status("silver_global_historical", "failed")
+        return {"status": "failed", "error": str(e)}
+
+@app.post("/trigger/silver-global-latest")
+def trigger_silver_global_latest():
+    try:
+        ingest_silver_global_latest()
+        update_status("silver_global_latest", "success")
+        return {"status": "success"}
+    except Exception as e:
+        update_status("silver_global_latest", "failed")
+        return {"status": "failed", "error": str(e)}        
