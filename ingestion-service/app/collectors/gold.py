@@ -12,8 +12,8 @@ CURRENCY_VND = "VND"
 SJC_NAME = "Vàng miếng SJC"
 REGION_ID_VN = 7   # Toan Quoc-VN
 
-CAFEF_PRICE_MULTIPLIER = 10_000
-
+CAFEF_PRICE_MULTIPLIER = 100_000
+CAFEF_PRICE_MULTIPLIER_HISTORICAL = 1_000_000
 
 # ---------- FETCH ----------
 def fetch_vn_historical():
@@ -48,8 +48,8 @@ def normalize_vn_historical(histories: list[dict]):
             REGION_ID_VN,
             UNIT_LUONG,
             CURRENCY_VND,
-            row["buyPrice"] * CAFEF_PRICE_MULTIPLIER,
-            row["sellPrice"] * CAFEF_PRICE_MULTIPLIER,
+            row["buyPrice"] * CAFEF_PRICE_MULTIPLIER_HISTORICAL,
+            row["sellPrice"] * CAFEF_PRICE_MULTIPLIER_HISTORICAL,
             row["createdAt"]
         ))
 

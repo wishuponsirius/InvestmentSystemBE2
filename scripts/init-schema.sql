@@ -165,6 +165,11 @@ INSERT INTO currencies (currency_code) VALUES
 ('SEK'), ('SGD'), ('THB'), ('USD'), ('VND');
 
 INSERT INTO asset_class (name) VALUES ('Gold'), ('Silver');
+INSERT INTO asset_class (name)
+SELECT currency_code
+FROM currencies
+WHERE currency_code <> 'VND'
+AND currency_code NOT IN (SELECT name FROM asset_class);
 
 INSERT INTO regions (region_code, region_name, country_code) VALUES
 ('VN-HN', 'Hà Nội', 'VN'),
@@ -182,7 +187,8 @@ INSERT INTO units (unit_name, symbol) VALUES
 ('Gram', 'g'),
 ('Troy Ounce', 'oz'),
 ('Tael', 'tael'),
-('Kilogram','kg');
+('Kilogram','kg'),
+('Currency Unit', 'ccy');
 
 INSERT INTO unit_conversion (from_unit_id, to_unit_id, factor) VALUES
 (1,2,10),(2,1,0.1),

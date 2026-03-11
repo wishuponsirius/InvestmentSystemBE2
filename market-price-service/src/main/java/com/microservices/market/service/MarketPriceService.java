@@ -2,6 +2,7 @@ package com.microservices.market.service;
 
 import com.microservices.market.dto.response.PriceResponseDTO;
 import com.microservices.market.entity.*;
+import com.microservices.market.exception.ResourceNotFoundException;
 import com.microservices.market.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,10 @@ public class MarketPriceService {
     public List<PriceResponseDTO> getPrices(String regionCode, String assetName, String range) {
 
         Region region = regionRepo.findByRegionCodeIgnoreCase(regionCode)
-                .orElseThrow(() -> new RuntimeException("Region not found"));
+                .orElseThrow(() ->  new ResourceNotFoundException("Region '" + regionCode + "' not found"));
 
         AssetClass asset = assetRepo.findByNameIgnoreCase(assetName)
-                .orElseThrow(() -> new RuntimeException("Asset not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Asset '" + assetName + "' not found"));
 
         List<MarketPriceRaw> prices;
 
@@ -37,6 +38,13 @@ public class MarketPriceService {
                     region.getRegionId(),
                     asset.getAssetId(),
                     from
+            );
+        }
+
+        if (prices.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "No price data found for asset '" + assetName +
+                            "' in region '" + regionCode + "'"
             );
         }
 
@@ -63,7 +71,9 @@ public class MarketPriceService {
                 return now.minusYears(1);
 
             default:
-                throw new IllegalArgumentException("Invalid range");
+                throw new IllegalArgumentException(
+                        "Invalid range. Allowed values: all, 1d, 1w, 1m, 1y"
+                );
         }
     }
 

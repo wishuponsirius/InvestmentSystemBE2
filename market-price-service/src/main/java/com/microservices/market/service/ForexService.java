@@ -2,6 +2,7 @@ package com.microservices.market.service;
 
 import com.microservices.market.dto.response.ForexResponseDTO;
 import com.microservices.market.entity.ExchangeRate;
+import com.microservices.market.exception.ResourceNotFoundException;
 import com.microservices.market.repository.ExchangeRateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,15 +18,25 @@ public class ForexService {
 
     public List<ForexResponseDTO> getRates(String currency, String range) {
 
+        String currencyCode = currency.toUpperCase();
+
         List<ExchangeRate> rates;
 
         if (range.equalsIgnoreCase("all")) {
-            rates = repo.findAllRates(currency.toUpperCase());
+
+            rates = repo.findAllRates(currencyCode);
+
         } else {
 
             LocalDateTime from = calculateFromTime(range);
 
-            rates = repo.findRates(currency.toUpperCase(), from);
+            rates = repo.findRates(currencyCode, from);
+        }
+
+        if (rates.isEmpty()) {
+            throw new ResourceNotFoundException(
+                    "No exchange rates found for currency '" + currencyCode + "'"
+            );
         }
 
         return rates.stream()
@@ -53,7 +64,7 @@ public class ForexService {
             case "1w" -> now.minusWeeks(1);
             case "1m" -> now.minusMonths(1);
             case "1y" -> now.minusYears(1);
-            default -> throw new IllegalArgumentException("Invalid range");
+            default -> throw new IllegalArgumentException("Invalid range. Allowed values: all, 1d, 1w, 1m, 1y");
         };
     }
 }

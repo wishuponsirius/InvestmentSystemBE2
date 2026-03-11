@@ -33,9 +33,9 @@ public class PortfolioController {
             description = """
                     Retrieve historical foreign exchange rates against VND.
                     
-                    Supported assets: Gold, Silver
+                    Supported assets: Gold, Silver, Forex (currencies list is the same as below)
                     
-                    Supported Units: Lượng, Chỉ, Gram, Troy Ounce, Tael, Kilogram
+                    Supported Units: Lượng, Chỉ, Gram, Troy Ounce, Tael, Kilogram, Currency Unit
             
                     Supported currencies:
                     AUD, CAD, CHF, CNY, DKK, EUR, GBP, HKD, INR, JPY,
