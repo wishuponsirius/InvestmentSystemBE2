@@ -223,7 +223,7 @@ def health():
         }
     }
 
-@app.post("/trigger/gold-vn-historical")
+@app.post("/jobs/gold/vn/historical")
 def trigger_gold_vn_historical():
     try:
         ingest_gold_vn_historical()
@@ -234,7 +234,7 @@ def trigger_gold_vn_historical():
         return {"status": "failed", "error": str(e)}
     
 
-@app.post("/trigger/gold-vn-latest")
+@app.post("/jobs/gold/vn/latest")
 def trigger_gold_vn_latest():
     try:
         ingest_gold_vn_latest()
@@ -244,7 +244,7 @@ def trigger_gold_vn_latest():
         update_status("gold_vn_latest", "failed")
         return {"status": "failed", "error": str(e)}    
     
-@app.post("/trigger/silver-vn-historical")
+@app.post("/jobs/silver/vn/historical")
 def trigger_silver_historical():
     try:
         ingest_silver_vn_historical()
@@ -254,7 +254,7 @@ def trigger_silver_historical():
         update_status("silver_vn_historical", "failed")
         return {"status": "failed", "error": str(e)}
     
-@app.post("/trigger/gold-global-historical")
+@app.post("/jobs/gold/global/historical")
 def trigger_gold_global_historical():
     try:
         ingest_gold_global_historical()
@@ -264,7 +264,7 @@ def trigger_gold_global_historical():
         update_status("gold_global_historical", "failed")
         return {"status": "failed", "error": str(e)}
 
-@app.post("/trigger/gold-global-latest")
+@app.post("/jobs/gold/global/latest")
 def trigger_gold_global_latest():
     try:
         ingest_gold_global_latest()
@@ -274,7 +274,7 @@ def trigger_gold_global_latest():
         update_status("gold_global_latest", "failed")
         return {"status": "failed", "error": str(e)}        
 
-@app.post("/trigger/silver-vn-latest")
+@app.post("/jobs/silver/vn/latest")
 def trigger_silver_latest():
     try:
         ingest_silver_vn_latest()
@@ -284,7 +284,7 @@ def trigger_silver_latest():
         update_status("silver_vn_latest", "failed")
         return {"status": "failed", "error": str(e)}
 
-@app.post("/trigger/forex/{currency}/latest")
+@app.post("/jobs/forex/{currency}/latest")
 def trigger_forex_latest(
     currency: str = Path(..., description=f"Accepted currencies: {', '.join(CURRENCIES)}"
     )):
@@ -308,7 +308,7 @@ def trigger_forex_latest(
 
         return {"status": "failed", "error": str(e)}
 
-@app.post("/trigger/forex/{currency}/historical")
+@app.post("/jobs/forex/{currency}/historical")
 def trigger_forex_historical(currency: str
     = Path(..., description=f"Accepted currencies: {', '.join(CURRENCIES)}")
     ):
@@ -332,7 +332,7 @@ def trigger_forex_historical(currency: str
 
         return {"status": "failed", "error": str(e)}                
     
-@app.post("/trigger/silver-global-historical")
+@app.post("/jobs/silver/global/historical")
 def trigger_silver_global_historical():
     try:
         ingest_silver_global_historical()
@@ -342,7 +342,7 @@ def trigger_silver_global_historical():
         update_status("silver_global_historical", "failed")
         return {"status": "failed", "error": str(e)}
 
-@app.post("/trigger/silver-global-latest")
+@app.post("/jobs/silver/global/latest")
 def trigger_silver_global_latest():
     try:
         ingest_silver_global_latest()
