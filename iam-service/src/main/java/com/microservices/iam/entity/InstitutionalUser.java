@@ -25,6 +25,9 @@ public class InstitutionalUser {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "avatar_public_id")
+    private String avatarPublicId;
+
     @Column(name = "org_name", nullable = false)
     private String orgName;
 
@@ -52,7 +55,7 @@ public class InstitutionalUser {
     @Column(name = "create_date", updatable = false)
     private LocalDateTime createDate;
 
-    @Column(name = "is_delete")
+    @Column(name = "is_deleted")
     @Builder.Default
     private Boolean isDelete = false;
 

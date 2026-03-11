@@ -2,15 +2,15 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/investment_db
-    username: postgres
-    password: postgres
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     hikari:
       maximum-pool-size: 5
 
   mail:
-    username: {GMAIL_USERNAME}   # set in your IDE environment variables
-    password: {GMAIL_APP_PASSWORD}  # Gmail App Password (not your real password)
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
 
   jpa:
     show-sql: true
@@ -36,3 +36,8 @@ logging:
   level:
     com.microservices: DEBUG
     org.hibernate.SQL: DEBUG
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}

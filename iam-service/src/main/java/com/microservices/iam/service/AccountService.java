@@ -19,6 +19,7 @@ public class AccountService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryAvatarService cloudinaryAvatarService;
 
     public UserResponse getAccount(String email) {
         InstitutionalUser user = userRepository.findByContactEmailIgnoreCase(email)
@@ -45,6 +46,27 @@ public class AccountService {
 
         log.info("User updated own account: {}", user.getContactEmail());
 
+        return mapToUserResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateAvatar(String email, org.springframework.web.multipart.MultipartFile file) {
+        InstitutionalUser user = userRepository.findByContactEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        String oldPublicId = user.getAvatarPublicId();
+
+        CloudinaryAvatarService.UploadResult upload = cloudinaryAvatarService.uploadAvatar(user.getId(), file);
+        user.setAvatarUrl(upload.url());
+        user.setAvatarPublicId(upload.publicId());
+
+        userRepository.save(user);
+
+        if (oldPublicId != null && !oldPublicId.isBlank() && !oldPublicId.equals(upload.publicId())) {
+            cloudinaryAvatarService.deleteByPublicId(oldPublicId);
+        }
+
+        log.info("User updated avatar: {}", user.getContactEmail());
         return mapToUserResponse(user);
     }
 

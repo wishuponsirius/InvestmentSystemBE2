@@ -7,13 +7,18 @@ spring:
   application:
     name: iam-service
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
   mail:
@@ -38,3 +43,6 @@ management:
   endpoint:
     health:
       show-details: always
+
+cloudinary:
+  folder: ${CLOUDINARY_FOLDER:investment-system/avatars}

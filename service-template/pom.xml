@@ -23,7 +23,7 @@
     <artifactId>service-template</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <n>Service Template</n>
+    <name>Service Template</name>
     <description>Template for new microservices — rename before use</description>
 
     <dependencies>

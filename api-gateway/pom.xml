@@ -14,7 +14,7 @@
     <artifactId>api-gateway</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <n>API Gateway</n>
+    <name>API Gateway</name>
     <description>Spring Cloud Gateway — single entry point for all microservices</description>
 
     <dependencies>
