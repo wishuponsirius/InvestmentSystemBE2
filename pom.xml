@@ -17,6 +17,7 @@
         <module>api-gateway</module>
         <module>iam-service</module>
         <module>service-template</module>
+        <module>market-price-service</module>
     </modules>
 
     <parent>

@@ -1,0 +1,33 @@
+# ── Profile: local ────────────────────────────────────────────────────────────
+# Connects to the Postgres container spun up by docker-compose.yml (postgres-local)
+# Start it with:  docker compose up postgres-local
+# Then hit Run in IntelliJ with Active Profile = local
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/investment_db
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  jpa:
+    show-sql: true   # handy in dev, too noisy for prod
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+  client:
+    service-url:
+      defaultZone: http://admin:admin@localhost:8761/eureka/
+    registry-fetch-interval-seconds: 5
+
+logging:
+  level:
+    com.microservices: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

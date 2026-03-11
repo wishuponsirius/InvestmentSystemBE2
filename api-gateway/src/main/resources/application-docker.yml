@@ -38,6 +38,11 @@ spring:
           predicates:
             - Path=/ingest/**         
 
+        - id: market-price-service
+          uri: lb://market-price-service
+          predicates:
+            - Path=/api/prices/**
+            -
         # Swagger aggregation — forwards /v3/api-docs/{service} to each service
         - id: iam-service-docs
           uri: lb://iam-service
@@ -52,7 +57,14 @@ spring:
             - Path=/v3/api-docs/ingestion-service
           filters:
             - RewritePath=/v3/api-docs/ingestion-service, /openapi.json  
-            
+
+        - id: market-price-service-docs
+          uri: lb://market-price-service
+          predicates:
+            - Path=/v3/api-docs/market-price-service
+          filters:
+            - RewritePath=/v3/api-docs/market-price-service, /v3/api-docs
+
         # ── Add more routes here as you add services ───────────────────────
         # - id: market-price-service
         #   uri: lb://market-price-service
