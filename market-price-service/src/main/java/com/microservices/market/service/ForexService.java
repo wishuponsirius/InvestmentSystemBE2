@@ -1,6 +1,6 @@
 package com.microservices.market.service;
 
-import com.microservices.market.dto.reponse.ForexResponseDTO;
+import com.microservices.market.dto.response.ForexResponseDTO;
 import com.microservices.market.entity.ExchangeRate;
 import com.microservices.market.repository.ExchangeRateRepository;
 import lombok.RequiredArgsConstructor;

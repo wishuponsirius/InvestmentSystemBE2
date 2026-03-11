@@ -41,7 +41,12 @@ spring:
         - id: market-price-service
           uri: lb://market-price-service
           predicates:
-            - Path=/api/prices/**
+            - Path=/prices/**
+
+        - id: market-price-service-portfolio
+          uri: lb://market-price-service
+          predicates:
+            - Path=/portfolio/**
             -
         # Swagger aggregation — forwards /v3/api-docs/{service} to each service
         - id: iam-service-docs

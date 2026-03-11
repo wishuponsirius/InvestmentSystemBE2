@@ -1,6 +1,6 @@
 package com.microservices.market.service;
 
-import com.microservices.market.dto.reponse.PriceResponseDTO;
+import com.microservices.market.dto.response.PriceResponseDTO;
 import com.microservices.market.entity.*;
 import com.microservices.market.repository.*;
 import lombok.RequiredArgsConstructor;

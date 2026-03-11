@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "asset_portfolio")
+@Table(
+        name="asset_portfolio",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "asset_id"}))
 @Getter
 @Setter
 @NoArgsConstructor

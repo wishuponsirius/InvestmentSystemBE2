@@ -150,7 +150,10 @@ CREATE INDEX idx_market_price_asset ON market_price_raw(asset_id);
 CREATE INDEX idx_market_price_region ON market_price_raw(region_id);
 CREATE INDEX idx_market_price_timestamp ON market_price_raw(timestamp);
 CREATE INDEX idx_exchange_rates_currency ON exchange_rates(currency_code);
-
+CREATE INDEX idx_portfolio_user
+ON asset_portfolio(user_id);
+CREATE INDEX idx_portfolio_user_asset
+ON asset_portfolio(user_id, asset_id);
 -- =========================
 -- SEED DATA
 -- =========================
@@ -193,3 +196,6 @@ INSERT INTO data_sources (name, country_code) VALUES
 ('Kitcon', 'GLOBAL'),
 ('Vietcombank', 'VN');
 
+ALTER TABLE asset_portfolio
+ADD CONSTRAINT unique_user_asset
+UNIQUE (user_id, asset_id);

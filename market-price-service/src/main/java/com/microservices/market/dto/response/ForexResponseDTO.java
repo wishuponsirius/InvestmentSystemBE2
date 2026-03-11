@@ -1,4 +1,4 @@
-package com.microservices.market.dto.reponse;
+package com.microservices.market.dto.response;
 
 
 import lombok.Builder;

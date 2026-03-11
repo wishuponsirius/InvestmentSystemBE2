@@ -1,7 +1,7 @@
 package com.microservices.market.controller;
 
-import com.microservices.market.dto.reponse.ForexResponseDTO;
-import com.microservices.market.dto.reponse.PriceResponseDTO;
+import com.microservices.market.dto.response.ForexResponseDTO;
+import com.microservices.market.dto.response.PriceResponseDTO;
 import com.microservices.market.service.ForexService;
 import com.microservices.market.service.MarketPriceService;
 import io.swagger.v3.oas.annotations.Operation;

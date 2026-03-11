@@ -49,7 +49,7 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.success("User retrieved", user));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(summary = "Update user",
                description = "Update org name, email, role, or active status. Only provided fields are updated.")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
