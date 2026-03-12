@@ -9,8 +9,8 @@ spring:
       maximum-pool-size: 5
 
   mail:
-    username: {GMAIL_USERNAME}   # set in your IDE environment variables
-    password: {GMAIL_PASSWORD} # Gmail App Password (not your real password)
+    username: ${GMAIL_USERNAME}   # set in your IDE environment variables
+    password: ${GMAIL_PASSWORD} # Gmail App Password (not your real password)
 
   jpa:
     show-sql: true
