@@ -25,6 +25,9 @@ public class InstitutionalUser {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "avatar_public_id")
+    private String avatarPublicId;
+
     @Column(name = "org_name", nullable = false)
     private String orgName;
 

@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/me")
@@ -60,4 +61,16 @@ public class AccountController {
                 ApiResponse.success("Password changed successfully")
         );
     }
+
+    @PatchMapping(value = "/avatar", consumes = "multipart/form-data")
+    @Operation(summary = "Upload & update avatar for current user")
+    public ResponseEntity<ApiResponse<UserResponse>> updateAvatar(
+            @Parameter(hidden = true)
+            @RequestHeader("X-User-Email") String email,
+            @RequestPart("file") MultipartFile file) {
+
+        UserResponse response = accountService.updateAvatar(email, file);
+        return ResponseEntity.ok(ApiResponse.success("Avatar updated", response));
+    }
+
 }

@@ -23,7 +23,7 @@
     <artifactId>market-price-service</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <n>Market Price Service</n>
+    <name>Market Price Service</name>
     <description>Service for returning the prices</description>
 
     <dependencies>

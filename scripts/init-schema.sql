@@ -27,6 +27,7 @@ CREATE TABLE currencies (
 CREATE TABLE institutional_user (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   avatar_url VARCHAR(512),
+  avatar_public_id VARCHAR(255),
   org_name VARCHAR(255) NOT NULL,
   contact_email VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
@@ -154,6 +155,8 @@ CREATE INDEX idx_portfolio_user
 ON asset_portfolio(user_id);
 CREATE INDEX idx_portfolio_user_asset
 ON asset_portfolio(user_id, asset_id);
+CREATE INDEX idx_exchange_rates_currency_ts
+ON exchange_rates(currency_code, timestamp DESC);
 -- =========================
 -- SEED DATA
 -- =========================
@@ -205,3 +208,53 @@ INSERT INTO data_sources (name, country_code) VALUES
 ALTER TABLE asset_portfolio
 ADD CONSTRAINT unique_user_asset
 UNIQUE (user_id, asset_id);
+
+CREATE MATERIALIZED VIEW normalized_market_price AS
+SELECT
+    m.price_id,
+    m.asset_id,
+    m.source_id,
+    m.timestamp,
+    m.currency_code,
+
+    -- 1. Normalize Unit (Sell & Buy)
+    CASE
+        WHEN m.unit_id = 3 THEN m.sell_price
+        ELSE m.sell_price * COALESCE(uc.factor, 1)
+    END AS sell_price_gram,
+
+    CASE
+        WHEN m.unit_id = 3 THEN m.buy_price
+        ELSE m.buy_price * COALESCE(uc.factor, 1)
+    END AS buy_price_gram,
+
+    -- 2. Normalize to VND using the LATERAL join
+    CASE
+        WHEN m.currency_code = 'VND' THEN
+            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price * COALESCE(uc.factor, 1) END)
+        ELSE
+            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price * COALESCE(uc.factor, 1) END) * COALESCE(er.sell_price, 1)
+    END AS sell_price_vnd,
+
+    CASE
+        WHEN m.currency_code = 'VND' THEN
+            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price * COALESCE(uc.factor, 1) END)
+        ELSE
+            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price * COALESCE(uc.factor, 1) END) * COALESCE(er.buy_price, 1)
+    END AS buy_price_vnd
+
+FROM market_price_raw m
+LEFT JOIN unit_conversion uc
+  ON m.unit_id = uc.from_unit_id AND uc.to_unit_id = 3
+LEFT JOIN LATERAL (
+    SELECT sell_price, buy_price
+    FROM exchange_rates e
+    WHERE e.currency_code = m.currency_code
+      AND e.timestamp <= m.timestamp
+    ORDER BY e.timestamp DESC
+    LIMIT 1
+) er ON TRUE
+WITH NO DATA; 
+
+CREATE INDEX idx_norm_market_price_composite
+ON normalized_market_price(asset_id, timestamp DESC);

@@ -10,7 +10,7 @@ spring:
 
   mail:
     username: {GMAIL_USERNAME}   # set in your IDE environment variables
-    password: {GMAIL_APP_PASSWORD}  # Gmail App Password (not your real password)
+    password: {GMAIL_PASSWORD} # Gmail App Password (not your real password)
 
   jpa:
     show-sql: true
@@ -27,7 +27,8 @@ jwt:
 eureka:
   instance:
     prefer-ip-address: true
-    instance-id: ${spring.application.name}:${server.port}
+    instance-id: ${spring.application.name}:${server.port}a
+
   client:
     service-url:
       defaultZone: http://admin:admin@localhost:8761/eureka/
@@ -36,3 +37,8 @@ logging:
   level:
     com.microservices: DEBUG
     org.hibernate.SQL: DEBUG
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+  api-key: ${CLOUDINARY_API_KEY:}
+  api-secret: ${CLOUDINARY_API_SECRET:}
