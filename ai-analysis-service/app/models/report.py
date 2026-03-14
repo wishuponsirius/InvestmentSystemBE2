@@ -61,10 +61,9 @@ class PortfolioReport(BaseModel):
     risk: RiskMetrics
     diversification_score: float
 
-    signals: list[MomentumSignal]
-    trade_recommendations: list[TradeRecommendation]
-    rebalance_target_weights: dict[str, float]
+    signals: list[MomentumSignal] = Field(default_factory=list)
+    trade_recommendations: list[TradeRecommendation] = Field(default_factory=list)
 
-    alerts: list[str]
-    explanation: str = ""
-    recommendation_summary: str = ""
+    alerts: list[str] = Field(default_factory=list)
+    explanation: Optional[str] = ""
+    recommendation_summary: Optional[str] = ""
