@@ -39,11 +39,14 @@ class MomentumSignal(BaseModel):
 
 class TradeRecommendation(BaseModel):
     asset: str
-    action: str          # BUY | SELL | HOLD | REDUCE
-    urgency: str         # HIGH | MEDIUM | LOW
-    quantity: float
-    value_vnd: float
+    action: str
+    urgency: str
+    size_band: Optional[str] = None
+    size_hint: Optional[str] = None
+    estimated_pct_range: Optional[str] = None
+    value_vnd_range: Optional[str] = None
     rationale: str
+    conviction: float
 
 
 class PortfolioReport(BaseModel):
@@ -63,7 +66,6 @@ class PortfolioReport(BaseModel):
 
     signals: list[MomentumSignal]
     trade_recommendations: list[TradeRecommendation]
-    rebalance_target_weights: dict[str, float]
 
     alerts: list[str]
     explanation: str = ""
