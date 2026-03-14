@@ -219,7 +219,6 @@ def health():
             "silver_vn": silver_stale,
             "silver_global": silver_global_stale,
             "forex": forex_stale
-    
         }
     }
 

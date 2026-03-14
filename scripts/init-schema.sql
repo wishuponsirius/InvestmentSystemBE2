@@ -198,7 +198,9 @@ INSERT INTO unit_conversion (from_unit_id, to_unit_id, factor) VALUES
 (1,3,37.5),(3,1,0.0266667),
 (2,3,3.75),(3,2,0.266667),
 (4,3,31.1034768),(3,4,0.0321507),
-(5,3,37.7993642),(3,5,0.0264555);
+(5,3,37.7993642),(3,5,0.0264555),
+(6, 3, 1000.0),  -- kg to g
+(3, 6, 0.001);
 
 INSERT INTO data_sources (name, country_code) VALUES
 ('CafeF', 'VN'),
@@ -220,27 +222,27 @@ SELECT
     -- 1. Normalize Unit (Sell & Buy)
     CASE
         WHEN m.unit_id = 3 THEN m.sell_price
-        ELSE m.sell_price * COALESCE(uc.factor, 1)
+        ELSE m.sell_price / COALESCE(uc.factor, 1)
     END AS sell_price_gram,
 
     CASE
         WHEN m.unit_id = 3 THEN m.buy_price
-        ELSE m.buy_price * COALESCE(uc.factor, 1)
+        ELSE m.buy_price / COALESCE(uc.factor, 1)
     END AS buy_price_gram,
 
     -- 2. Normalize to VND using the LATERAL join
     CASE
         WHEN m.currency_code = 'VND' THEN
-            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price * COALESCE(uc.factor, 1) END)
+            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price / COALESCE(uc.factor, 1) END)
         ELSE
-            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price * COALESCE(uc.factor, 1) END) * COALESCE(er.sell_price, 1)
+            (CASE WHEN m.unit_id = 3 THEN m.sell_price ELSE m.sell_price / COALESCE(uc.factor, 1) END) * COALESCE(er.sell_price, 1)
     END AS sell_price_vnd,
 
     CASE
         WHEN m.currency_code = 'VND' THEN
-            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price * COALESCE(uc.factor, 1) END)
+            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price / COALESCE(uc.factor, 1) END)
         ELSE
-            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price * COALESCE(uc.factor, 1) END) * COALESCE(er.buy_price, 1)
+            (CASE WHEN m.unit_id = 3 THEN m.buy_price ELSE m.buy_price / COALESCE(uc.factor, 1) END) * COALESCE(er.buy_price, 1)
     END AS buy_price_vnd
 
 FROM market_price_raw m
@@ -258,3 +260,50 @@ WITH NO DATA;
 
 CREATE INDEX idx_norm_market_price_composite
 ON normalized_market_price(asset_id, timestamp DESC);
+
+CREATE MATERIALIZED VIEW normalized_fx_price AS
+SELECT
+    ac.asset_id,
+    e.currency_code,
+    e.timestamp,
+    e.sell_price AS sell_price_vnd,
+    e.buy_price AS buy_price_vnd
+FROM exchange_rates e
+JOIN asset_class ac
+  ON ac.name = e.currency_code
+WHERE e.base_currency_code = 'VND';
+
+CREATE MATERIALIZED VIEW normalized_asset_price AS
+
+-- metals
+SELECT
+  asset_id,
+  timestamp,
+  sell_price_vnd,
+  buy_price_vnd
+FROM normalized_market_price
+
+UNION ALL
+
+-- currencies
+SELECT
+  asset_id,
+  timestamp,
+  sell_price_vnd,
+  buy_price_vnd
+FROM normalized_fx_price;
+
+CREATE INDEX idx_norm_asset_price
+ON normalized_asset_price(asset_id, timestamp DESC);
+
+CREATE TABLE portfolio_report_cache (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL,
+    report_data     JSONB NOT NULL,
+    generated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES institutional_user(id) ON DELETE CASCADE
+);
+
+-- only keep latest report per user, lookup by user_id
+CREATE UNIQUE INDEX uq_report_cache_user ON portfolio_report_cache(user_id);
+CREATE INDEX idx_report_cache_user_id ON portfolio_report_cache(user_id);
