@@ -6,7 +6,7 @@ class Settings:
     DB_NAME = os.getenv("DB_NAME") or "investment_db"
     DB_USERNAME = os.getenv("DB_USERNAME") or "postgres"
     DB_PASSWORD = os.getenv("DB_PASSWORD") or "postgres"
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or "AIzaSyD9TsCJx9vfwQBjPp3ii7InXhlVkF9Hj7I"
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or ""
     GEMINI_MODEL = os.getenv("GEMINI_MODEL") or "gemini-3.1-flash-lite-preview"
     POOL_MIN_SIZE = int(os.getenv("POOL_MIN_SIZE") or 2)
     POOL_MAX_SIZE = int(os.getenv("POOL_MAX_SIZE") or 10)
