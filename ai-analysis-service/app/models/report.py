@@ -33,9 +33,22 @@ class MomentumSignal(BaseModel):
     reason: str
     ma_7: float
     ma_30: float
+    ma_90: float
     z_score: float
     rsi_14: Optional[float]
+    spread_z: Optional[float] = None
+    spread_signal: Optional[str] = None
 
+
+class SpreadInsight(BaseModel):
+    asset_id: int
+    asset_name: str
+    current_spread_pct: float | None = None
+    mean_spread_pct_30d: float | None = None
+    z_score_30d: float | None = None
+    signal: str
+    summary: str
+    recommendation_hint: str
 
 class TradeRecommendation(BaseModel):
     asset: str
@@ -65,6 +78,7 @@ class PortfolioReport(BaseModel):
     diversification_score: float
 
     signals: list[MomentumSignal]
+    spread_insights: list[SpreadInsight] = Field(default_factory=list) 
     trade_recommendations: list[TradeRecommendation]
 
     alerts: list[str]

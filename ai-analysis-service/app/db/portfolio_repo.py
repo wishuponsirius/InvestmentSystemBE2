@@ -52,3 +52,18 @@ async def fetch_asset_ids(
         user_id,
     )
     return [row["asset_id"] for row in rows]
+
+async def fetch_asset_name_id_map(
+    conn: asyncpg.Connection,
+    user_id: str,
+) -> dict[str, int]:
+    rows = await conn.fetch(
+        """
+        SELECT ac.name, ap.asset_id
+        FROM asset_portfolio ap
+        JOIN asset_class ac ON ac.asset_id = ap.asset_id
+        WHERE ap.user_id = $1
+        """,
+        user_id,
+    )
+    return {row["name"]: row["asset_id"] for row in rows}

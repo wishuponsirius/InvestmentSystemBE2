@@ -5,9 +5,9 @@ from models.report import (
 from analytics.metrics import PortfolioMetricsEngine
 from analytics.signals import generate_signals, generate_trade_recommendations
 from db.price_repo import fetch_price_matrix, fetch_latest_prices
-from db.portfolio_repo import fetch_portfolio, fetch_asset_ids
+from db.portfolio_repo import fetch_portfolio, fetch_asset_ids, fetch_asset_name_id_map
 from ai.gemini import explain_report
-
+from analytics.spread_insight import build_metal_spread_insight
 
 async def build_portfolio_report(
     user_id: str,
@@ -18,7 +18,7 @@ async def build_portfolio_report(
     asset_ids = await fetch_asset_ids(conn, user_id)
     if not asset_ids:
         raise ValueError(f"No portfolio found for user {user_id}")
-
+    asset_name_id_map = await fetch_asset_name_id_map(conn, user_id)
     portfolio = await fetch_portfolio(conn, user_id)
     prices_df = await fetch_price_matrix(conn, asset_ids)
     current_prices = await fetch_latest_prices(conn, asset_ids)
@@ -98,9 +98,26 @@ async def build_portfolio_report(
         correlation_matrix=corr,
     )
 
+    
+        # 8.2 Spread insights (for metal assets only)
+    spread_insights = []
+
+    for asset_name in portfolio.keys():
+        normalized = asset_name.lower().strip()
+        asset_id = asset_name_id_map.get(asset_name)
+
+        if normalized in {"gold", "silver"} and asset_id is not None:
+            insight_dict = await build_metal_spread_insight(
+                conn=conn,
+                asset_id=asset_id,
+                asset_name=asset_name,
+                days=365,
+            )
+            spread_insights.append(insight_dict)
+
     # 7. Signals & recommendations
-    signals = generate_signals(prices_df)
-    trade_recs = generate_trade_recommendations(signals, portfolio, current_prices)
+    signals = generate_signals(prices_df, spread_insights)
+    trade_recs = generate_trade_recommendations(signals, portfolio, current_prices, spread_insights)
 
     # 8. Alerts
     alerts = []
@@ -112,6 +129,7 @@ async def build_portfolio_report(
     for p in performance:
         if p.return_pct < -20:
             alerts.append(f"{p.asset} is down more than 20% from entry price")
+
 
     # 9. Simple equal-weight rebalance target
     n = len(portfolio)
@@ -131,8 +149,8 @@ async def build_portfolio_report(
         risk=risk,
         diversification_score=div_score,
         signals=signals,
+        spread_insights=spread_insights,
         trade_recommendations=trade_recs,
-        rebalance_target_weights=rebalance_targets,
         alerts=alerts,
     )
 
