@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+
+VN_TZ = ZoneInfo("Asia/Ho_Chi_Minh")
 
 
 class AllocationItem(BaseModel):
@@ -29,7 +33,7 @@ class RiskMetrics(BaseModel):
 
 class MomentumSignal(BaseModel):
     asset: str
-    signal: str          # BUY | SELL | HOLD
+    signal: str
     reason: str
     ma_7: float
     ma_30: float
@@ -50,6 +54,7 @@ class SpreadInsight(BaseModel):
     summary: str
     recommendation_hint: str
 
+
 class TradeRecommendation(BaseModel):
     asset: str
     action: str
@@ -63,7 +68,9 @@ class TradeRecommendation(BaseModel):
 
 
 class PortfolioReport(BaseModel):
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(
+        default_factory=lambda: datetime.now(VN_TZ)
+    )
     user_id: str
 
     portfolio_value_vnd: float
@@ -78,7 +85,7 @@ class PortfolioReport(BaseModel):
     diversification_score: float
 
     signals: list[MomentumSignal]
-    spread_insights: list[SpreadInsight] = Field(default_factory=list) 
+    spread_insights: list[SpreadInsight] = Field(default_factory=list)
     trade_recommendations: list[TradeRecommendation]
 
     alerts: list[str]

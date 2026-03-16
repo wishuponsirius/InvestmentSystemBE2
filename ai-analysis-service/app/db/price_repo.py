@@ -59,16 +59,17 @@ async def fetch_latest_prices(
     Used for current portfolio valuation.
     """
     rows = await conn.fetch(
-        """
-        SELECT DISTINCT ON (nap.asset_id)
-            ac.name             AS asset,
-            nap.sell_price_vnd  AS price
-        FROM normalized_asset_price nap
-        JOIN asset_class ac ON ac.asset_id = nap.asset_id
-        WHERE nap.asset_id = ANY($1)
-          AND nap.sell_price_vnd IS NOT NULL
-        ORDER BY nap.asset_id, nap.timestamp DESC
-        """,
-        asset_ids,
-    )
+    """
+    SELECT DISTINCT ON (nap.asset_id)
+        ac.name             AS asset,
+        nap.sell_price_vnd  AS price
+    FROM normalized_asset_price nap
+    JOIN asset_class ac ON ac.asset_id = nap.asset_id
+    WHERE nap.asset_id = ANY($1)
+      AND nap.source_id = 1
+      AND nap.sell_price_vnd IS NOT NULL
+    ORDER BY nap.asset_id, nap.timestamp DESC
+    """,
+    asset_ids,
+)
     return {row["asset"]: float(row["price"]) for row in rows}

@@ -45,10 +45,16 @@ spring:
           predicates:
             - Path=/prices/**
 
+        - id: ai-analysis-service
+          uri: http://localhost:8000
+          predicates:
+            - Path=/portfolio/report/**
+
         - id: market-price-service-portfolio
           uri: lb://market-price-service
           predicates:
             - Path=/portfolio/**
+
 
         # Swagger aggregation — forwards /v3/api-docs/{service} to each service
         - id: iam-service-docs
@@ -72,6 +78,13 @@ spring:
             - Path=/v3/api-docs/market-price-service
           filters:
             - RewritePath=/v3/api-docs/market-price-service, /v3/api-docs
+
+        - id: ai-analysis-service-docs
+          uri: http://localhost:8000
+          predicates:
+            - Path=/v3/api-docs/ai-analysis-service
+          filters:
+            - RewritePath=/v3/api-docs/ai-analysis-service, /openapi.json
 
 logging:
   level:

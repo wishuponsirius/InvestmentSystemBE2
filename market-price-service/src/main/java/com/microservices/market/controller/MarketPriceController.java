@@ -1,6 +1,7 @@
 package com.microservices.market.controller;
 
 import com.microservices.market.dto.response.ForexResponseDTO;
+import com.microservices.market.dto.response.PremiumPriceResponseDTO;
 import com.microservices.market.dto.response.PriceResponseDTO;
 import com.microservices.market.service.ForexService;
 import com.microservices.market.service.MarketPriceService;
@@ -95,5 +96,10 @@ public class MarketPriceController {
             @PathVariable String range
     ) {
         return ForexService.getRates(currency, range);
+    }
+
+    @GetMapping("/premium")
+    public List<PremiumPriceResponseDTO> getLatestPremiumPrices() {
+        return service.getLatestPremiumPrices();
     }
 }

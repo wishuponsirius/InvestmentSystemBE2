@@ -144,6 +144,15 @@ CREATE TABLE asset_portfolio (
   FOREIGN KEY (currency_code) REFERENCES currencies(currency_code)
 );
 
+
+CREATE TABLE portfolio_report_cache (
+    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id         UUID NOT NULL,
+    report_data     JSONB NOT NULL,
+    generated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES institutional_user(id) ON DELETE CASCADE
+);
+
 -- =========================
 -- INDEXES
 -- =========================
@@ -157,6 +166,9 @@ CREATE INDEX idx_portfolio_user_asset
 ON asset_portfolio(user_id, asset_id);
 CREATE INDEX idx_exchange_rates_currency_ts
 ON exchange_rates(currency_code, timestamp DESC);
+-- only keep latest report per user, lookup by user_id
+CREATE UNIQUE INDEX uq_report_cache_user ON portfolio_report_cache(user_id);
+CREATE INDEX idx_report_cache_user_id ON portfolio_report_cache(user_id);
 -- =========================
 -- SEED DATA
 -- =========================
@@ -271,13 +283,15 @@ SELECT
 FROM exchange_rates e
 JOIN asset_class ac
   ON ac.name = e.currency_code
-WHERE e.base_currency_code = 'VND';
+WHERE e.base_currency_code = 'VND'
+WITH NO DATA;
 
 CREATE MATERIALIZED VIEW normalized_asset_price AS
 
 -- metals
 SELECT
   asset_id,
+  source_id,
   timestamp,
   sell_price_vnd,
   buy_price_vnd
@@ -288,22 +302,84 @@ UNION ALL
 -- currencies
 SELECT
   asset_id,
+  NULL::INTEGER AS source_id,   -- FX doesn't have asset-level source
   timestamp,
   sell_price_vnd,
   buy_price_vnd
-FROM normalized_fx_price;
+FROM normalized_fx_price
+WITH NO DATA;
 
 CREATE INDEX idx_norm_asset_price
 ON normalized_asset_price(asset_id, timestamp DESC);
 
-CREATE TABLE portfolio_report_cache (
-    id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id         UUID NOT NULL,
-    report_data     JSONB NOT NULL,
-    generated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES institutional_user(id) ON DELETE CASCADE
-);
+CREATE MATERIALIZED VIEW asset_premium_vn AS
+WITH latest_vn AS (
+    SELECT DISTINCT ON (asset_id)
+        asset_id,
+        timestamp,
+        buy_price_vnd
+    FROM normalized_market_price
+    WHERE source_id = 1
+      AND asset_id IN (1, 2)
+    ORDER BY asset_id, timestamp DESC
+),
+latest_global AS (
+    SELECT DISTINCT ON (asset_id)
+        asset_id,
+        timestamp,
+        buy_price_vnd
+    FROM normalized_market_price
+    WHERE source_id = 2
+      AND asset_id IN (1, 2)
+    ORDER BY asset_id, timestamp DESC
+)
+SELECT
+    x.asset_id,
+    x.display_unit,
+    x.vietnam_timestamp,
+    x.global_timestamp,
+    x.vn_buy_price_vnd * x.multiplier AS vietnam_buy_price,
+    x.gl_buy_price_vnd * x.multiplier AS global_buy_price,
+    (x.vn_buy_price_vnd - x.gl_buy_price_vnd) * x.multiplier AS premium_price
+FROM (
+    SELECT
+        vn.asset_id,
+        vn.timestamp AS vietnam_timestamp,
+        gl.timestamp AS global_timestamp,
+        vn.buy_price_vnd AS vn_buy_price_vnd,
+        gl.buy_price_vnd AS gl_buy_price_vnd,
+        CASE
+            WHEN vn.asset_id = 1 THEN 37.5
+            WHEN vn.asset_id = 2 THEN 1000
+        END AS multiplier,
+        CASE
+            WHEN vn.asset_id = 1 THEN 'VND/lượng'
+            WHEN vn.asset_id = 2 THEN 'VND/kg'
+        END AS display_unit
+    FROM latest_vn vn
+    JOIN latest_global gl
+        ON vn.asset_id = gl.asset_id
+) x
+WITH NO DATA;
 
--- only keep latest report per user, lookup by user_id
-CREATE UNIQUE INDEX uq_report_cache_user ON portfolio_report_cache(user_id);
-CREATE INDEX idx_report_cache_user_id ON portfolio_report_cache(user_id);
+CREATE UNIQUE INDEX uq_asset_premium_vn_asset
+ON asset_premium_vn(asset_id);
+
+CREATE OR REPLACE FUNCTION refresh_market_pipeline()
+RETURNS void AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW normalized_market_price;
+    REFRESH MATERIALIZED VIEW normalized_asset_price;
+    REFRESH MATERIALIZED VIEW asset_premium_vn;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION refresh_full_pipeline()
+RETURNS void AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW normalized_market_price;
+    REFRESH MATERIALIZED VIEW normalized_fx_price;
+    REFRESH MATERIALIZED VIEW normalized_asset_price;
+    REFRESH MATERIALIZED VIEW asset_premium_vn;
+END;
+$$ LANGUAGE plpgsql;

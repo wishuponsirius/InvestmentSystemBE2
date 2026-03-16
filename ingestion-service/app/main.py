@@ -24,7 +24,8 @@ from app.collectors.silver_global import (
     ingest_silver_global_latest
 )
 from app.utils.db_check import (has_sufficient_history, is_data_stale,
-    has_sufficient_forex_history, is_forex_data_stale) 
+    has_sufficient_forex_history, is_forex_data_stale,
+    refresh_full_pipeline, refresh_market_pipeline) 
 from app.scheduler import start_scheduler
 from app.utils.job_status import ingestion_status, update_status
 
@@ -145,7 +146,7 @@ async def lifespan(app: FastAPI):
             print(f"✔ Historical forex data exists for {currency}. Skipping.")
 
             update_status(f"forex_{currency}_historical", "skipped")
-        
+            
     # ---------- START SCHEDULER ----------
     start_scheduler()
 

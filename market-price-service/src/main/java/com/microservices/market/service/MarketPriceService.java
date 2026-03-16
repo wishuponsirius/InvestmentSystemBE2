@@ -1,5 +1,6 @@
 package com.microservices.market.service;
 
+import com.microservices.market.dto.response.PremiumPriceResponseDTO;
 import com.microservices.market.dto.response.PriceResponseDTO;
 import com.microservices.market.entity.*;
 import com.microservices.market.exception.ResourceNotFoundException;
@@ -7,6 +8,8 @@ import com.microservices.market.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -59,16 +62,16 @@ public class MarketPriceService {
 
         switch (range.toLowerCase()) {
             case "1d":
-                return now.minusDays(1);
+                return now.minusDays(1).toLocalDate().atStartOfDay();
 
             case "1w":
-                return now.minusWeeks(1);
+                return now.minusWeeks(1).toLocalDate().atStartOfDay();
 
             case "1m":
-                return now.minusMonths(1);
+                return now.minusMonths(1).toLocalDate().atStartOfDay();
 
             case "1y":
-                return now.minusYears(1);
+                return now.minusYears(1).toLocalDate().atStartOfDay();
 
             default:
                 throw new IllegalArgumentException(
@@ -86,5 +89,39 @@ public class MarketPriceService {
                 .transferPrice(price.getTransferPrice())
                 .spread(price.getSpread())
                 .build();
+    }
+
+
+    public List<PremiumPriceResponseDTO> getLatestPremiumPrices() {
+        List<Object[]> rows = marketRepo.getLatestPremiumPrices();
+
+        return rows.stream()
+                .map(this::mapToPremiumPriceResponseDTO)
+                .toList();
+    }
+
+    private PremiumPriceResponseDTO mapToPremiumPriceResponseDTO(Object[] row) {
+        return new PremiumPriceResponseDTO(
+                ((Number) row[0]).intValue(),
+                (String) row[1],
+                (BigDecimal) row[2],
+                (BigDecimal) row[3],
+                (BigDecimal) row[4],
+                toLocalDateTime(row[5]),
+                toLocalDateTime(row[6])
+        );
+    }
+
+    private LocalDateTime toLocalDateTime(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime;
+        }
+        throw new IllegalArgumentException("Cannot convert value to LocalDateTime: " + value);
     }
 }
