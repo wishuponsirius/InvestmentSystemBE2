@@ -46,7 +46,7 @@ spring:
             - Path=/prices/**
 
         - id: ai-analysis-service
-          uri: http://localhost:8000
+          uri: http://localhost:8001
           predicates:
             - Path=/portfolio/report/**
 
@@ -80,7 +80,7 @@ spring:
             - RewritePath=/v3/api-docs/market-price-service, /v3/api-docs
 
         - id: ai-analysis-service-docs
-          uri: http://localhost:8000
+          uri: http://localhost:8001
           predicates:
             - Path=/v3/api-docs/ai-analysis-service
           filters:

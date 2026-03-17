@@ -276,6 +276,7 @@ ON normalized_market_price(asset_id, timestamp DESC);
 CREATE MATERIALIZED VIEW normalized_fx_price AS
 SELECT
     ac.asset_id,
+    e.source_id,
     e.currency_code,
     e.timestamp,
     e.sell_price AS sell_price_vnd,
@@ -302,7 +303,7 @@ UNION ALL
 -- currencies
 SELECT
   asset_id,
-  NULL::INTEGER AS source_id,   -- FX doesn't have asset-level source
+  source_id,
   timestamp,
   sell_price_vnd,
   buy_price_vnd
