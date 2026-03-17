@@ -57,5 +57,7 @@ springdoc:
         url: /v3/api-docs/ingestion-service
       - name: market-price-service
         url: /v3/api-docs/market-price-service
+      - name: ai-analysis-service
+        url: /v3/api-docs/ai-analysis-service
   api-docs:
     enabled: true

@@ -1,5 +1,6 @@
 package com.microservices.market.repository;
 
+import com.microservices.market.dto.response.PremiumPriceResponseDTO;
 import com.microservices.market.entity.MarketPriceRaw;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -36,4 +37,19 @@ public interface MarketPriceRepository extends JpaRepository<MarketPriceRaw, Int
             Integer regionId,
             Integer assetId
     );
+
+
+    @Query(value = """
+        SELECT
+            asset_id,
+            display_unit,
+            vietnam_buy_price,
+            global_buy_price,
+            premium_price,
+            vietnam_timestamp,
+            global_timestamp
+        FROM asset_premium_vn
+        ORDER BY asset_id
+        """, nativeQuery = true)
+    List<Object[]> getLatestPremiumPrices();
 }

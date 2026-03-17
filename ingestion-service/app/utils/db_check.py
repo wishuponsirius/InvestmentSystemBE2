@@ -122,3 +122,22 @@ def is_forex_data_stale(currency: str, threshold_days: int = 2):
     age = now - latest.replace(tzinfo=timezone.utc)
 
     return age > timedelta(days=threshold_days)
+
+def refresh_market_pipeline():
+    conn = get_conn()
+    conn.autocommit = True
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT refresh_market_pipeline();")
+    finally:
+        conn.close()
+
+
+def refresh_full_pipeline():
+    conn = get_conn()
+    conn.autocommit = True
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT refresh_full_pipeline();")
+    finally:
+        conn.close()

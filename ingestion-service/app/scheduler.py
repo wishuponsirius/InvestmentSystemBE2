@@ -7,6 +7,7 @@ from app.collectors.forex import ingest_forex_latest
 from app.collectors.gold_global import ingest_gold_global_latest
 from app.utils.job_status import update_status
 from app.collectors.silver_global import ingest_silver_global_latest
+from app.utils.db_check import refresh_full_pipeline, refresh_market_pipeline
 
 scheduler = BackgroundScheduler()
 
@@ -23,6 +24,7 @@ def job_gold_vn_latest():
     
     try:
         ingest_gold_vn_latest()
+        refresh_market_pipeline()
         update_status("gold_vn_latest", "success")
     except Exception:
         update_status("gold_vn_latest", "failed")
@@ -33,6 +35,7 @@ def job_gold_global_latest():
 
     try:
         ingest_gold_global_latest()
+        refresh_market_pipeline()
         update_status("gold_global_latest", "success")
     except Exception:
         update_status("gold_global_latest", "failed")
@@ -43,6 +46,7 @@ def job_silver_vn_latest():
     
     try:
         ingest_silver_vn_latest()
+        refresh_market_pipeline()
         update_status("silver_vn_latest", "success")
     except Exception:
         update_status("silver_vn_latest", "failed")
@@ -53,6 +57,7 @@ def job_silver_global_latest():
 
     try:
         ingest_silver_global_latest()
+        refresh_market_pipeline()
         update_status("silver_global_latest", "success")
     except Exception as e:
         print(e)
@@ -64,7 +69,8 @@ def job_forex_latest():
 
     try:
         ingest_forex_latest(CURRENCIES)
-
+        refresh_full_pipeline()
+        
         for currency in CURRENCIES:
             update_status(f"forex_{currency}_latest", "success")
 

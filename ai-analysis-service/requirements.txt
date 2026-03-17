@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pandas
+numpy
+sqlalchemy
+psycopg2-binary
+pydantic
+pyportfolioopt
+scipy
+statsmodels
+scikit-learn
+python-dotenv
+httpx
